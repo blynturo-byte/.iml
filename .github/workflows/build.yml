@@ -1,0 +1,25 @@
+name: build-libIML
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile dylib (iOS arm64)
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          clang -arch arm64 -isysroot "$SDK" -miphoneos-version-min=14.0 \
+            -dynamiclib -fobjc-arc -framework Foundation \
+            -install_name @rpath/libIML.dylib \
+            -o libIML.dylib iml.m
+          codesign -f -s - libIML.dylib
+          file libIML.dylib
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libIML
+          path: libIML.dylib
